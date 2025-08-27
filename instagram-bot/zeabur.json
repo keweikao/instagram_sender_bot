@@ -1,33 +1,10 @@
 {
   "name": "instagram-dm-bot",
   "build": {
-    "dockerfile": "Dockerfile"
+    "commands": [
+      "pip install -r requirements.txt"
+    ]
   },
-  "env": {
-    "INSTAGRAM_USERNAME": {
-      "description": "Instagram 帳號",
-      "required": true
-    },
-    "INSTAGRAM_PASSWORD": {
-      "description": "Instagram 密碼", 
-      "required": true
-    },
-    "DAILY_LIMIT": {
-      "description": "每日發送限制",
-      "default": "50"
-    },
-    "HOURLY_LIMIT": {
-      "description": "每小時發送限制",
-      "default": "10"
-    },
-    "MIN_INTERVAL": {
-      "description": "最小發送間隔(秒)",
-      "default": "60"
-    },
-    "MAX_INTERVAL": {
-      "description": "最大發送間隔(秒)",
-      "default": "180"
-    }
-  },
+  "start": "python app.py",
   "port": 5000
 }
