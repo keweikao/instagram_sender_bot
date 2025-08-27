@@ -30,6 +30,6 @@ COPY . .
 ENV PYTHONPATH=/app
 ENV FLASK_ENV=production
 
-EXPOSE 5000
+EXPOSE 8080
 
 CMD ["python", "app.py"]

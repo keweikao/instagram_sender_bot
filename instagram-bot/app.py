@@ -443,12 +443,14 @@ if __name__ == '__main__':
     logger.info("🚀 Instagram DM Bot 啟動中...")
     logger.info("環境: Zeabur 雲端部署")
     
-    # 從環境變數取得端口
-    port = int(os.environ.get('PORT', 5000))
+    # Zeabur 使用 PORT 8080
+    port = int(os.environ.get('PORT', 8080))
+    logger.info(f"🌐 啟動 Flask 服務於端口: {port}")
     
     # 啟動 Flask 服務
     app.run(
         host='0.0.0.0',
         port=port,
-        debug=False
+        debug=False,
+        threaded=True
     )
