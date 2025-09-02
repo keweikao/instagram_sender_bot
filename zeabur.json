@@ -1,0 +1,10 @@
+{
+  "name": "instagram-dm-bot",
+  "build": {
+    "commands": [
+      "pip install -r requirements.txt"
+    ]
+  },
+  "start": "python simple_app.py",
+  "port": 8080
+}
