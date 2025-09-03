@@ -38,4 +38,4 @@ ENV FLASK_ENV=production
 
 EXPOSE 8080
 
-CMD ["python", "simple_app.py"]
+CMD ["python", "app.py"]
