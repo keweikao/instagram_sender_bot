@@ -6,7 +6,7 @@
 import os
 import logging
 from datetime import datetime
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +45,44 @@ def test():
             'INSTAGRAM_USERNAME': os.environ.get('INSTAGRAM_USERNAME', 'Not set'),
         }
     })
+
+@app.route('/send_dms', methods=['POST'])
+def send_dms():
+    """DM 發送端點 - 簡化版本（僅供測試）"""
+    try:
+        logger.info("收到 DM 發送請求（簡化版本）")
+        data = request.json or {}
+        
+        # 模擬成功回應
+        dm_list = data.get('data', [])
+        results = []
+        
+        for dm_item in dm_list:
+            results.append({
+                'rowIndex': dm_item.get('rowIndex'),
+                'igUsername': dm_item.get('igUsername'),
+                'success': True,
+                'error': None,
+                'note': '簡化版本 - 模擬發送成功'
+            })
+        
+        return jsonify({
+            'success': True,
+            'message': '簡化版本 - 模擬發送完成',
+            'results': results,
+            'summary': {
+                'total': len(results),
+                'success': len(results),
+                'failed': 0
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"處理 DM 請求時發生錯誤: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     logger.info("🚀 簡化版 Instagram Bot 啟動中...")
