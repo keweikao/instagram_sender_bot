@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
     && wget -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chromedriver-linux64.zip" \
     && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
     && rm /tmp/chromedriver.zip \
-    && chmod +x /usr/local/bin/chromedriver \
+    && chmod +x /usr/local/bin/chromedriver-linux64/chromedriver \
+    && ln -s /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
     # 清理 apt cache
     && rm -rf /var/lib/apt/lists/*
 
