@@ -2,25 +2,48 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安裝系統依賴，並直接下載固定版本的 Chrome 和對應的 ChromeDriver
+# 安裝系統依賴和 Chrome
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
+    curl \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgconf-2-4 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
     --no-install-recommends \
-    # 下載並安裝固定版本的 Chrome
-    && wget -O /tmp/chrome.zip "https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chrome-linux64.zip" \
-    && unzip /tmp/chrome.zip -d /opt/ \
-    && rm /tmp/chrome.zip \
-    # 建立一個符號連結，讓 Selenium 能找到 Chrome
-    && ln -s /opt/chrome-linux64/chrome /usr/bin/google-chrome \
-    # 下載並安裝對應版本的 ChromeDriver
-    && wget -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chromedriver-linux64.zip" \
-    && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
-    && rm /tmp/chromedriver.zip \
-    && chmod +x /usr/local/bin/chromedriver-linux64/chromedriver \
-    && ln -s /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
-    # 清理 apt cache
-    && rm -rf /var/lib/apt/lists/*
+    # 安裝最新穩定版 Chrome
+    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    # 清理
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/*
 
 
 

@@ -56,7 +56,7 @@ class InstagramBot:
         """設定 Chrome 瀏覽器 - Zeabur 優化版本"""
         try:
             chrome_options = Options()
-            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--headless=new')  # 使用新版 headless 模式
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
@@ -67,6 +67,9 @@ class InstagramBot:
             chrome_options.add_argument('--window-size=1920,1080')
             chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
             chrome_options.add_argument('--remote-debugging-port=9222')
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
             
             # 針對容器環境的優化
             chrome_options.add_argument('--memory-pressure-off')
@@ -75,8 +78,29 @@ class InstagramBot:
             chrome_options.add_argument('--disable-background-timer-throttling')
             chrome_options.add_argument('--disable-renderer-backgrounding')
             chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+            chrome_options.add_argument('--disable-ipc-flooding-protection')
+            chrome_options.add_argument('--disable-default-apps')
+            chrome_options.add_argument('--disable-sync')
             
-            self.driver = webdriver.Chrome(options=chrome_options)
+            # 使用系統安裝的 Chrome，讓 Selenium 自動管理 ChromeDriver
+            from selenium.webdriver.chrome.service import Service
+            from selenium.webdriver.common.service import utils
+            
+            # 嘗試使用系統的 ChromeDriver，如果沒有則使用 webdriver-manager
+            try:
+                # 讓 Selenium 自動下載匹配的 ChromeDriver
+                self.driver = webdriver.Chrome(options=chrome_options)
+            except Exception as driver_error:
+                logger.warning(f"自動 ChromeDriver 失敗，嘗試手動指定: {str(driver_error)}")
+                # 如果自動下載失敗，嘗試使用 webdriver-manager
+                try:
+                    from webdriver_manager.chrome import ChromeDriverManager
+                    service = Service(ChromeDriverManager().install())
+                    self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                except ImportError:
+                    logger.error("未安裝 webdriver-manager，請手動安裝: pip install webdriver-manager")
+                    raise driver_error
+            
             self.driver.set_page_load_timeout(30)
             self.driver.implicitly_wait(10)
             
