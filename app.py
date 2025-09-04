@@ -324,18 +324,19 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     })
 
-@app.route('/test', methods=['POST'])
+@app.route('/test', methods=['GET', 'POST'])
 def test_connection():
     """測試連接端點"""
     try:
-        data = request.json or {}
-        logger.info(f"收到測試請求: {data}")
+        data = request.json or {} if request.method == 'POST' else {}
+        logger.info(f"收到測試請求 ({request.method}): {data}")
         
         return jsonify({
             'success': True,
             'message': 'Python Instagram Bot 運行正常',
             'environment': 'Zeabur',
             'timestamp': datetime.now().isoformat(),
+            'method': request.method,
             'received_data': data
         }), 200
         
