@@ -419,7 +419,7 @@ def home():
     return jsonify({
         'service': 'Instagram DM Bot',
         'status': 'running',
-        'version': '1.0.2',
+        'version': '1.0.3',
         'timestamp': datetime.now().isoformat()
     })
 
