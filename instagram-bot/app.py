@@ -179,14 +179,38 @@ class InstagramBot:
             
             logger.info(f"正在發送 DM 給 @{username}")
             
+            # 確保登入狀態穩定 - 等待更長時間
+            logger.info("等待登入狀態穩定...")
+            time.sleep(5)
+            
             # 前往用戶頁面
             user_url = f"{INSTAGRAM_CONFIG['base_url']}/{username}/"
+            logger.info(f"正在訪問用戶頁面: {user_url}")
             self.driver.get(user_url)
             
-            # 等待頁面載入
-            WebDriverWait(self.driver, 15).until(
+            # 等待頁面載入 - 增加超時時間
+            WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.TAG_NAME, "main"))
             )
+            
+            # 檢查是否被重定向到登入頁面
+            current_url = self.driver.current_url
+            if "login" in current_url:
+                logger.error(f"被重定向到登入頁面: {current_url}")
+                logger.error("登入會話可能已失效，需要重新登入")
+                
+                # 嘗試重新登入
+                logger.info("嘗試重新登入...")
+                if self.login():
+                    logger.info("重新登入成功，重試訪問用戶頁面")
+                    time.sleep(3)
+                    self.driver.get(user_url)
+                    WebDriverWait(self.driver, 20).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "main"))
+                    )
+                else:
+                    logger.error("重新登入失敗")
+                    return False
             
             # 檢查用戶是否存在
             if "Sorry, this page isn't available" in self.driver.page_source:
@@ -256,6 +280,39 @@ class InstagramBot:
                 # 記錄頁面信息用於調試
                 logger.error(f"❌ 找不到 @{username} 的訊息按鈕")
                 logger.info(f"當前頁面 URL: {self.driver.current_url}")
+                
+                # 詳細調試信息
+                try:
+                    # 記錄頁面標題
+                    page_title = self.driver.title
+                    logger.info(f"頁面標題: {page_title}")
+                    
+                    # 尋找所有可能的按鈕元素
+                    buttons = self.driver.find_elements(By.TAG_NAME, "button")
+                    logger.info(f"頁面上共有 {len(buttons)} 個按鈕")
+                    
+                    for i, button in enumerate(buttons[:10]):  # 只記錄前10個
+                        try:
+                            button_text = button.text.strip()
+                            if button_text:
+                                logger.info(f"按鈕 {i+1}: '{button_text}'")
+                        except:
+                            pass
+                    
+                    # 尋找所有包含 "message" 文字的元素
+                    message_elements = self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Message') or contains(text(), 'message') or contains(text(), '訊息')]")
+                    logger.info(f"包含 message 文字的元素: {len(message_elements)}")
+                    
+                    for i, elem in enumerate(message_elements[:5]):  # 只記錄前5個
+                        try:
+                            elem_text = elem.text.strip()
+                            tag_name = elem.tag_name
+                            logger.info(f"Message 元素 {i+1}: <{tag_name}> '{elem_text}'")
+                        except:
+                            pass
+                            
+                except Exception as debug_error:
+                    logger.warning(f"調試信息獲取失敗: {str(debug_error)}")
                 
                 # 檢查是否是私人帳號
                 if "This Account is Private" in self.driver.page_source:
