@@ -193,28 +193,71 @@ class InstagramBot:
                 logger.error(f"❌ 用戶 @{username} 不存在或已被刪除")
                 return False
             
-            # 尋找並點擊 "Message" 按鈕
+            # 尋找並點擊 "Message" 按鈕 - 擴展選擇器
             message_button_found = False
+            
+            # 更全面的按鈕選擇器
             button_selectors = [
+                # 標準文字選擇器
                 "//div[text()='Message']",
-                "//div[text()='訊息']",
+                "//div[text()='訊息']", 
+                "//span[text()='Message']",
+                "//span[text()='訊息']",
+                "//button[text()='Message']",
+                "//button[text()='訊息']",
+                
+                # 包含文字的選擇器
+                "//div[contains(text(), 'Message')]",
+                "//div[contains(text(), '訊息')]",
+                "//span[contains(text(), 'Message')]",
+                "//button[contains(text(), 'Message')]",
+                
+                # class 和屬性選擇器
                 "//button[contains(@class, 'message')]",
-                "//a[contains(@href, '/direct/')]"
+                "//div[contains(@class, 'message')]",
+                "//a[contains(@href, '/direct/')]",
+                "//button[@type='button' and contains(., 'Message')]",
+                
+                # 更寬泛的選擇器
+                "//*[contains(@aria-label, 'Message')]",
+                "//*[contains(@aria-label, '訊息')]",
+                "//button[contains(@role, 'button') and contains(text(), 'Message')]"
             ]
             
-            for selector in button_selectors:
+            logger.info(f"嘗試尋找 @{username} 的訊息按鈕...")
+            
+            for i, selector in enumerate(button_selectors, 1):
                 try:
-                    message_button = WebDriverWait(self.driver, 5).until(
+                    logger.info(f"嘗試選擇器 {i}/{len(button_selectors)}: {selector}")
+                    message_button = WebDriverWait(self.driver, 3).until(
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
+                    logger.info(f"✅ 找到訊息按鈕，使用選擇器: {selector}")
                     message_button.click()
                     message_button_found = True
+                    time.sleep(2)  # 等待點擊生效
                     break
                 except TimeoutException:
                     continue
+                except Exception as e:
+                    logger.warning(f"選擇器 {i} 出錯: {str(e)}")
+                    continue
             
             if not message_button_found:
+                # 記錄頁面信息用於調試
                 logger.error(f"❌ 找不到 @{username} 的訊息按鈕")
+                logger.info(f"當前頁面 URL: {self.driver.current_url}")
+                
+                # 檢查是否是私人帳號
+                if "This Account is Private" in self.driver.page_source:
+                    logger.error(f"@{username} 是私人帳號，無法發送訊息")
+                    return False
+                    
+                # 檢查是否需要關注才能發訊息
+                if "Follow to message" in self.driver.page_source:
+                    logger.error(f"需要先關注 @{username} 才能發送訊息")
+                    return False
+                    
                 return False
             
             # 等待訊息輸入框出現
