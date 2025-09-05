@@ -338,32 +338,69 @@ class InstagramBot:
                     page_title = self.driver.title
                     logger.info(f"頁面標題: {page_title}")
                     
-                    # 尋找所有可能的按鈕元素
-                    buttons = self.driver.find_elements(By.TAG_NAME, "button")
-                    logger.info(f"頁面上共有 {len(buttons)} 個按鈕")
+                    # 等待頁面完全載入
+                    time.sleep(5)
                     
-                    for i, button in enumerate(buttons[:10]):  # 只記錄前10個
+                    # 滾動到頁面頂部確保按鈕可見
+                    self.driver.execute_script("window.scrollTo(0, 0);")
+                    time.sleep(2)
+                    
+                    # 尋找所有按鈕和可點擊元素
+                    all_buttons = self.driver.find_elements(By.TAG_NAME, "button")
+                    all_divs = self.driver.find_elements(By.XPATH, "//div[@role='button']")
+                    all_links = self.driver.find_elements(By.TAG_NAME, "a")
+                    
+                    logger.info(f"頁面元素統計: {len(all_buttons)} 個button, {len(all_divs)} 個div[role=button], {len(all_links)} 個a標籤")
+                    
+                    # 記錄所有可能相關的元素
+                    all_clickable = all_buttons + all_divs + all_links
+                    for i, element in enumerate(all_clickable[:20]):  # 前20個
                         try:
-                            button_text = button.text.strip()
-                            if button_text:
-                                logger.info(f"按鈕 {i+1}: '{button_text}'")
-                        except:
-                            pass
+                            element_text = element.text.strip()
+                            tag_name = element.tag_name
+                            element_class = element.get_attribute('class')
+                            element_role = element.get_attribute('role')
+                            
+                            if element_text and any(keyword in element_text.lower() for keyword in ['message', 'follow', 'share', '訊息', '關注']):
+                                logger.info(f"相關元素 {i+1}: <{tag_name}> '{element_text}' class='{element_class}' role='{element_role}'")
+                        except Exception as e:
+                            continue
                     
-                    # 尋找所有包含 "message" 文字的元素
-                    message_elements = self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Message') or contains(text(), 'message') or contains(text(), '訊息')]")
-                    logger.info(f"包含 message 文字的元素: {len(message_elements)}")
+                    # 特別尋找包含 "Message" 的所有元素
+                    message_elements = self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Message')]")
+                    logger.info(f"包含 'Message' 文字的元素: {len(message_elements)}")
                     
-                    for i, elem in enumerate(message_elements[:5]):  # 只記錄前5個
+                    for i, elem in enumerate(message_elements):
                         try:
-                            elem_text = elem.text.strip()
-                            tag_name = elem.tag_name
-                            logger.info(f"Message 元素 {i+1}: <{tag_name}> '{elem_text}'")
+                            logger.info(f"Message元素 {i+1}: <{elem.tag_name}> '{elem.text.strip()}' xpath: {self.get_element_xpath(elem)}")
                         except:
-                            pass
+                            continue
                             
                 except Exception as debug_error:
                     logger.warning(f"調試信息獲取失敗: {str(debug_error)}")
+                    
+    def get_element_xpath(self, element):
+        """獲取元素的 XPath"""
+        try:
+            return self.driver.execute_script("""
+                function getElementXPath(element) {
+                    if (element.id !== '') return 'id("' + element.id + '")';
+                    if (element === document.body) return element.tagName;
+                    
+                    var ix = 0;
+                    var siblings = element.parentNode.childNodes;
+                    for (var i = 0; i < siblings.length; i++) {
+                        var sibling = siblings[i];
+                        if (sibling === element)
+                            return getElementXPath(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
+                        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
+                            ix++;
+                    }
+                }
+                return getElementXPath(arguments[0]);
+            """, element)
+        except:
+            return "無法獲取XPath"
                 
                 # 檢查是否是私人帳號
                 if "This Account is Private" in self.driver.page_source:
