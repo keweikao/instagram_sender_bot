@@ -151,8 +151,9 @@ class InstagramBot:
             login_button = self.driver.find_element(By.XPATH, "//button[@type='submit']")
             login_button.click()
             
-            # 等待登入完成
-            time.sleep(8)
+            # 等待登入完成 - 增加等待時間確保會話穩定
+            logger.info("等待登入會話建立...")
+            time.sleep(15)  # 增加到15秒
             
             # 檢查是否需要處理安全驗證
             try:
@@ -165,12 +166,33 @@ class InstagramBot:
             except TimeoutException:
                 pass  # 沒有出現該提示，繼續
             
-            # 檢查是否登入成功
+            # 檢查是否登入成功 - 更嚴格的驗證
             current_url = self.driver.current_url
-            if "instagram.com" in current_url and "login" not in current_url:
-                logger.info("✅ Instagram 登入成功")
-                self.is_logged_in = True
-                return True
+            logger.info(f"登入後 URL: {current_url}")
+            
+            # 確保真正登入成功
+            success_indicators = [
+                "instagram.com" in current_url and "login" not in current_url,
+                "accounts/login" not in current_url,
+                "/accounts/onetap" not in current_url
+            ]
+            
+            if all(success_indicators):
+                # 額外驗證：嘗試訪問首頁確認會話有效
+                logger.info("驗證登入會話有效性...")
+                self.driver.get("https://www.instagram.com/")
+                time.sleep(3)
+                
+                final_url = self.driver.current_url
+                logger.info(f"會話驗證後 URL: {final_url}")
+                
+                if "login" not in final_url:
+                    logger.info("✅ Instagram 登入成功且會話有效")
+                    self.is_logged_in = True
+                    return True
+                else:
+                    logger.error(f"❌ 登入會話無效，被重定向到: {final_url}")
+                    return False
             else:
                 logger.error(f"❌ Instagram 登入失敗，當前 URL: {current_url}")
                 return False
@@ -190,7 +212,11 @@ class InstagramBot:
             
             # 確保登入狀態穩定 - 等待更長時間
             logger.info("等待登入狀態穩定...")
-            time.sleep(5)
+            time.sleep(10)  # 增加到10秒
+            
+            # 檢查當前登入狀態
+            current_url_before = self.driver.current_url
+            logger.info(f"發送 DM 前的 URL: {current_url_before}")
             
             # 前往用戶頁面
             user_url = f"{INSTAGRAM_CONFIG['base_url']}/{username}/"
