@@ -269,14 +269,16 @@ class InstagramBot:
                     
                 return False
             
-            # 等待訊息輸入框出現
+            # 等待訊息輸入框出現 (使用更可靠的選擇器)
+            message_box_selector = "//div[@role='textbox']"
             WebDriverWait(self.driver, 15).until(
-                EC.presence_of_element_located((By.XPATH, "//textarea"))
+                EC.presence_of_element_located((By.XPATH, message_box_selector))
             )
             
             # 輸入訊息
-            message_input = self.driver.find_element(By.XPATH, "//textarea")
-            message_input.clear()
+            message_input = self.driver.find_element(By.XPATH, message_box_selector)
+            message_input.click()  # 確保焦點
+            time.sleep(0.5)
             message_input.send_keys(message)
             
             time.sleep(1)
