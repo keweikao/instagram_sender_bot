@@ -196,9 +196,9 @@ class InstagramBot:
             # 尋找並點擊 "Message" 按鈕 - 擴展選擇器
             message_button_found = False
             
-            # 更全面的按鈕選擇器
+            # 更全面的按鈕選擇器 - 基於實際 Instagram 界面
             button_selectors = [
-                # 標準文字選擇器
+                # 標準文字選擇器 - 注意 Instagram 使用的是 "Message" 不是 "Messages"
                 "//div[text()='Message']",
                 "//div[text()='訊息']", 
                 "//span[text()='Message']",
@@ -206,22 +206,31 @@ class InstagramBot:
                 "//button[text()='Message']",
                 "//button[text()='訊息']",
                 
-                # 包含文字的選擇器
-                "//div[contains(text(), 'Message')]",
-                "//div[contains(text(), '訊息')]",
-                "//span[contains(text(), 'Message')]",
-                "//button[contains(text(), 'Message')]",
+                # Instagram 常見的按鈕結構
+                "//div[@role='button' and contains(., 'Message')]",
+                "//div[@role='button' and contains(., '訊息')]",
+                "//button[@type='button' and text()='Message']",
+                "//button[@type='button' and text()='訊息']",
                 
-                # class 和屬性選擇器
-                "//button[contains(@class, 'message')]",
-                "//div[contains(@class, 'message')]",
+                # 包含文字的選擇器
+                "//div[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
+                "//div[contains(text(), '訊息')]",
+                "//span[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
+                "//button[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
+                
+                # 基於 aria-label 的選擇器（Instagram 常用）
+                "//*[contains(@aria-label, 'Message ')]",
+                "//*[contains(@aria-label, '訊息')]",
+                "//*[@aria-label='Message']",
+                
+                # Direct message 相關連結
                 "//a[contains(@href, '/direct/')]",
-                "//button[@type='button' and contains(., 'Message')]",
+                "//a[contains(@href, '/direct/new/')]",
                 
                 # 更寬泛的選擇器
-                "//*[contains(@aria-label, 'Message')]",
-                "//*[contains(@aria-label, '訊息')]",
-                "//button[contains(@role, 'button') and contains(text(), 'Message')]"
+                "//button[contains(@class, 'message')]",
+                "//div[contains(@class, 'message')]",
+                "//*[contains(@data-testid, 'message')]"
             ]
             
             logger.info(f"嘗試尋找 @{username} 的訊息按鈕...")
