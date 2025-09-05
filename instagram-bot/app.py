@@ -126,9 +126,18 @@ class InstagramBot:
                 EC.presence_of_element_located((By.NAME, "username"))
             )
             
-            # 輸入帳號密碼
-            username_input = self.driver.find_element(By.NAME, "username")
-            password_input = self.driver.find_element(By.NAME, "password")
+            # 輸入帳號密碼 - 使用更可靠的選擇器
+            try:
+                username_input = self.driver.find_element(By.NAME, "username")
+            except:
+                # 後備選擇器
+                username_input = self.driver.find_element(By.XPATH, "//input[@name='username']")
+            
+            try:
+                password_input = self.driver.find_element(By.NAME, "password") 
+            except:
+                # 後備選擇器
+                password_input = self.driver.find_element(By.XPATH, "//input[@name='password']")
             
             username_input.clear()
             username_input.send_keys(INSTAGRAM_CONFIG['username'])
@@ -220,32 +229,44 @@ class InstagramBot:
             # 尋找並點擊 "Message" 按鈕 - 擴展選擇器
             message_button_found = False
             
-            # 更全面的按鈕選擇器 - 基於實際 Instagram 界面
+            # 增強的按鈕選擇器 - 基於 GitHub 最佳實踐
             button_selectors = [
-                # 標準文字選擇器 - 注意 Instagram 使用的是 "Message" 不是 "Messages"
+                # 使用 normalize-space() 函數 - GitHub 推薦的最佳實踐
+                "//div[normalize-space(.)='Message']",
+                "//div[normalize-space(text())='Message']", 
+                "//span[normalize-space(.)='Message']",
+                "//button[normalize-space(.)='Message']",
+                "//div[normalize-space(.)='訊息']",
+                "//span[normalize-space(.)='訊息']",
+                "//button[normalize-space(.)='訊息']",
+                
+                # 標準文字選擇器
                 "//div[text()='Message']",
-                "//div[text()='訊息']", 
                 "//span[text()='Message']",
-                "//span[text()='訊息']",
                 "//button[text()='Message']",
+                "//div[text()='訊息']",
+                "//span[text()='訊息']",
                 "//button[text()='訊息']",
                 
                 # Instagram 常見的按鈕結構
+                "//div[@role='button' and normalize-space(.)='Message']",
                 "//div[@role='button' and contains(., 'Message')]",
-                "//div[@role='button' and contains(., '訊息')]",
+                "//button[@type='button' and normalize-space(.)='Message']",
                 "//button[@type='button' and text()='Message']",
-                "//button[@type='button' and text()='訊息']",
                 
-                # 包含文字的選擇器
+                # 包含文字的選擇器 - 排除 Messages
                 "//div[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
-                "//div[contains(text(), '訊息')]",
                 "//span[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
                 "//button[contains(text(), 'Message') and not(contains(text(), 'Messages'))]",
+                "//div[contains(text(), '訊息')]",
                 
-                # 基於 aria-label 的選擇器（Instagram 常用）
-                "//*[contains(@aria-label, 'Message ')]",
+                # 基於 aria-label 的選擇器
+                "//*[contains(@aria-label, 'Message')]",
                 "//*[contains(@aria-label, '訊息')]",
                 "//*[@aria-label='Message']",
+                
+                # 絕對路徑選擇器 - 來自 Stack Overflow 
+                "/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/div/header/section/div[1]/div[2]/div/div[2]",
                 
                 # Direct message 相關連結
                 "//a[contains(@href, '/direct/')]",
@@ -254,7 +275,11 @@ class InstagramBot:
                 # 更寬泛的選擇器
                 "//button[contains(@class, 'message')]",
                 "//div[contains(@class, 'message')]",
-                "//*[contains(@data-testid, 'message')]"
+                "//*[contains(@data-testid, 'message')]",
+                
+                # CSS 選擇器轉 XPath
+                "//*[contains(@class, '_acan') and text()='Message']",
+                "//*[contains(@class, '_acas') and text()='Message']"
             ]
             
             logger.info(f"嘗試尋找 @{username} 的訊息按鈕...")
